@@ -2,6 +2,7 @@ package com.spring.spring_rest.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -14,7 +15,7 @@ import java.util.Map;
 import java. util.HashMap;
 
 /**
- * Converts exceptions raised by student endpoints into HTTP responses.
+ * Converts application exceptions into structured HTTP error responses.
  */
 @ControllerAdvice 
 public class StudentExceptionHandler {
@@ -39,8 +40,8 @@ public class StudentExceptionHandler {
     }
 
     /**
-     * Builds a bad-request response for an exception 
-     * without a specific handler.
+     * Builds a generic bad-request response 
+     * for an otherwise unhandled exception.
      *
      * @param ex exception raised while handling the request
      * @return the error response with HTTP 400 status
@@ -57,7 +58,7 @@ public class StudentExceptionHandler {
     }
 
     /**
-     * Collects validation errors by field.
+     * Collects request validation errors, keyed by field name.
      *
      * @param ex exception containing the request validation errors
      * @return a map of field names to validation messages
@@ -89,5 +90,23 @@ public class StudentExceptionHandler {
         err.setTimeStamp(System.currentTimeMillis());
 
         return new ResponseEntity<>(err, HttpStatus.CONFLICT);
+    }
+
+    /**
+     * Returns a generic unauthorized response 
+     * for failed authentication attempts.
+     *
+     * @param ex authentication failure raised by Spring Security
+     * @return the error response with HTTP 401 status
+     */
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<StudentErrorResponse> handleAuthenticationException(
+            AuthenticationException ex) {
+        StudentErrorResponse err = new StudentErrorResponse();
+        err.setStatus(HttpStatus.UNAUTHORIZED.value());
+        err.setMessage("Username or password is incorrect");
+        err.setTimeStamp(System.currentTimeMillis());
+
+        return new ResponseEntity<>(err, HttpStatus.UNAUTHORIZED);
     }
 }
